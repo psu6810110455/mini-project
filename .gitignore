@@ -1,1 +1,31 @@
-node_modules
+# --- Dependencies (ไฟล์ไลบรารี ห้ามเอาขึ้นเด็ดขาด) ---
+node_modules/
+package-lock.json # (บางทีมเอาขึ้น บางทีมไม่เอาขึ้น แต่ถ้าทำงานคนเดียวเอาขึ้นก็ได้ครับ)
+
+# --- Environment Variables (ความลับ ห้ามเอาขึ้น!) ---
+.env
+.env.production
+.env.local
+
+# --- Build Output (ไฟล์ที่คอมไพล์แล้ว สร้างใหม่ได้ตลอด) ---
+/dist
+/build
+/coverage
+
+# --- Docker & Database ---
+# ถ้า map volume ไว้ในโปรเจกต์ให้ ignore ด้วย (แต่ถ้าใช้ named volume ก็ไม่เป็นไร)
+postgres_data/
+docker-data/
+
+# --- IDE & System (ไฟล์ตั้งค่าส่วนตัวของเครื่องเรา) ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- NestJS specific ---
+*.tsbuildinfo
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
