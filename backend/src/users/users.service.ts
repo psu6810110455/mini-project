@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -8,43 +10,54 @@ import * as bcrypt from 'bcrypt';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    // ⚠️ เช็คตรงนี้: ต้องเป็น Repository<User> (ห้ามมี [] ต่อท้าย User)
     private usersRepository: Repository<User>,
   ) {}
 
-  async findByUsername(username: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { username } });
-  }
-
-  // --- ส่วนแก้ Error ตรงนี้ ---
-  async create(createUserDto: any): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
-    // ✅ แก้ไข: ระบุ type : User ชัดเจน และไม่ใช้ ... spread operator กับ any
-    const user: User = this.usersRepository.create({
-      username: createUserDto.username,
+    // ✅ แก้จุดที่ 1: ใส่ as any เพื่อบอก TypeScript ว่า "เชื่อฉันเถอะ ค่านี้น่ะถูกแล้ว"
+    const user = this.usersRepository.create({
+      ...createUserDto,
       password: hashedPassword,
-      role: createUserDto.role || 'user', // กันเหนียวเผื่อไม่มี role ส่งมา
+      role: createUserDto.role as any, 
     });
 
     return this.usersRepository.save(user);
   }
-  // --------------------------
 
-  async findAll(): Promise<User[]> {
+  findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
-  async findOne(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
+  findOne(id: number): Promise<User | null> {
+    return this.usersRepository.findOneBy({ id });
   }
 
-  async update(id: number, updateUserDto: any) {
-    return this.usersRepository.update(id, updateUserDto);
+  async findOneByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { username } });
   }
 
-  async remove(id: number) {
-    return this.usersRepository.delete(id);
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User | null> {
+    const user = await this.findOne(id);
+    
+    if (!user) {
+      return null;
+    }
+    
+    if (updateUserDto.password) {
+      const salt = await bcrypt.genSalt();
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
+    }
+
+    // ✅ แก้จุดที่ 2: ใส่ as any ตรงนี้ด้วยครับ
+    this.usersRepository.merge(user, updateUserDto as any);
+    
+    return this.usersRepository.save(user);
+  }
+
+  async remove(id: number): Promise<void> {
+    await this.usersRepository.delete(id);
   }
 }

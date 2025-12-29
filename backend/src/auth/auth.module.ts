@@ -1,19 +1,23 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
+import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { jwtConstants } from './constants';
+import { JwtStrategy } from './jwt.strategy';
+import { AuthController } from './auth.controller'; // 1. อย่าลืม Import
 
 @Module({
   imports: [
     UsersModule,
+    PassportModule,
     JwtModule.register({
-      global: true,
-      secret: 'SECRET_KEY_123', // ของจริงควรใช้ ConfigService ตามโจทย์ แต่ใส่แบบนี้เพื่อทดสอบก่อนได้ครับ
+      secret: jwtConstants.secret,
       signOptions: { expiresIn: '60m' },
     }),
   ],
-  providers: [AuthService],
-  controllers: [AuthController],
+  controllers: [AuthController], // 2. ต้องใส่บรรทัดนี้ครับ! สำคัญที่สุด
+  providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

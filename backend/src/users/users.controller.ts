@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // Import Guard
 
 @Controller('users')
 export class UsersController {
@@ -12,6 +13,8 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  // 🔒 ล็อกห้องนี้: ต้องมี Token เท่านั้นถึงจะเข้าได้
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.usersService.findAll();
