@@ -1,9 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
-}
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Entity()
 export class User {
@@ -16,10 +12,13 @@ export class User {
   @Column()
   password: string;
 
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER,
-  })
-  role: UserRole;
+  // ❌ ของเดิมที่ Error: @Column({ type: 'enum', enum: ... })
+  // ✅ แก้เป็นแบบนี้ครับ (ลบ type: 'enum' ออก)
+  @Column({ default: 'user' }) 
+  role: string; 
+
+  @BeforeInsert()
+  async hashPassword() {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
 }
