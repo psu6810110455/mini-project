@@ -1,26 +1,95 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
+import { Booking, BookingStatus } from './entities/booking.entity';
+import { User } from '../users/entities/user.entity';
+import { SportField } from '../sport-fields/entities/sport-field.entity';
 
 @Injectable()
 export class BookingsService {
-  create(createBookingDto: CreateBookingDto) {
-    return 'This action adds a new booking';
+  constructor(
+    @InjectRepository(Booking)
+    private bookingsRepository: Repository<Booking>,
+  ) { }
+
+  async create(createBookingDto: CreateBookingDto, user: User) {
+    const { sportFieldId, startTime, endTime } = createBookingDto;
+
+    // 1. ตรวจสอบว่ามีสนามนี้จริงไหม
+    // เราจะใช้ QueryBuilder หรือดึงจาก ID ตรงๆ (Inject SportField Repository หรือใช้ Manager)
+    // เพื่อความง่าย ผมจะใช้ Manager เพื่อตรวจสอบข้าม Module ครับ
+    const sportField = await this.bookingsRepository.manager.findOne(SportField, {
+      where: { id: sportFieldId },
+    });
+
+    if (!sportField) {
+      throw new NotFoundException(`ไม่พบสนามหมายเลข #${sportFieldId} ครับ กรุณาสร้างสนามก่อนครับ`);
+    }
+
+    // 2. ตรวจสอบวันที่
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException('รูปแบบวันที่ไม่ถูกต้องครับ');
+    }
+
+    if (start >= end) {
+      throw new BadRequestException('เวลาเริ่มต้องมาก่อนเวลาเลิกครับ');
+    }
+
+    const booking = this.bookingsRepository.create({
+      startTime: start,
+      endTime: end,
+      status: BookingStatus.PENDING,
+      user: { id: user.id } as User,
+      sportField: sportField,
+    });
+
+    return this.bookingsRepository.save(booking);
   }
 
-  findAll() {
-    return `This action returns all bookings`;
+  async findMyBookings(userId: number) {
+    return this.bookingsRepository.find({
+      where: { user: { id: userId } },
+      relations: ['sportField'],
+      order: { startTime: 'DESC' },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} booking`;
+  async findAll() {
+    return this.bookingsRepository.find({
+      relations: ['user', 'sportField'],
+    });
   }
 
-  update(id: number, updateBookingDto: UpdateBookingDto) {
-    return `This action updates a #${id} booking`;
+  async findOne(id: number) {
+    const booking = await this.bookingsRepository.findOne({
+      where: { id },
+      relations: ['user', 'sportField'],
+    });
+    if (!booking) {
+      throw new NotFoundException(`Booking #${id} not found`);
+    }
+    return booking;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} booking`;
+  async cancel(id: number) {
+    const booking = await this.findOne(id);
+    booking.status = BookingStatus.CANCELLED;
+    return this.bookingsRepository.save(booking);
+  }
+
+  async update(id: number, updateBookingDto: UpdateBookingDto) {
+    const booking = await this.findOne(id);
+    Object.assign(booking, updateBookingDto);
+    return this.bookingsRepository.save(booking);
+  }
+
+  async remove(id: number) {
+    const booking = await this.findOne(id);
+    return this.bookingsRepository.remove(booking);
   }
 }

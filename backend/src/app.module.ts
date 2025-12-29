@@ -4,6 +4,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config'; // 1. Import Confi
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/entities/user.entity';
+import { BookingsModule } from './bookings/bookings.module';
+import { SportFieldsModule } from './sport-fields/sport-fields.module';
 
 @Module({
   imports: [
@@ -22,8 +24,8 @@ import { User } from './users/entities/user.entity';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User], // ใส่ Entity ทั้งหมดที่นี่ (หรือใช้ autoLoadEntities: true)
-        synchronize: true, // true แค่ตอน Dev (มันจะแก้ Table ให้เอง)
+        entities: [User],
+        synchronize: true,
         autoLoadEntities: true,
       }),
       inject: [ConfigService],
@@ -31,6 +33,8 @@ import { User } from './users/entities/user.entity';
 
     UsersModule,
     AuthModule,
+    BookingsModule,
+    SportFieldsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
