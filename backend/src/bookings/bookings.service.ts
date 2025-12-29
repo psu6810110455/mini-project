@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -18,8 +18,6 @@ export class BookingsService {
     const { sportFieldId, startTime, endTime } = createBookingDto;
 
     // 1. ตรวจสอบว่ามีสนามนี้จริงไหม
-    // เราจะใช้ QueryBuilder หรือดึงจาก ID ตรงๆ (Inject SportField Repository หรือใช้ Manager)
-    // เพื่อความง่าย ผมจะใช้ Manager เพื่อตรวจสอบข้าม Module ครับ
     const sportField = await this.bookingsRepository.manager.findOne(SportField, {
       where: { id: sportFieldId },
     });
@@ -28,7 +26,7 @@ export class BookingsService {
       throw new NotFoundException(`ไม่พบสนามหมายเลข #${sportFieldId} ครับ กรุณาสร้างสนามก่อนครับ`);
     }
 
-    // 2. ตรวจสอบวันที่
+    // 2. ตรวจสอบรูปแบบวันที่
     const start = new Date(startTime);
     const end = new Date(endTime);
 
@@ -38,6 +36,23 @@ export class BookingsService {
 
     if (start >= end) {
       throw new BadRequestException('เวลาเริ่มต้องมาก่อนเวลาเลิกครับ');
+    }
+
+    // 3. ✨ [Complex Logic] ตรวจสอบการจองซ้อน (Overlap Prevention)
+    // เงื่อนไขการซ้อนทับ: (เวลาเริ่มใหม่ < เวลาจบเดิม) และ (เวลาจบใหม่ > เวลาเริ่มเดิม)
+    const overlap = await this.bookingsRepository.createQueryBuilder('booking')
+      .where('booking.sportFieldId = :sportFieldId', { sportFieldId })
+      .andWhere('booking.status IN (:...statuses)', {
+        statuses: [BookingStatus.PENDING, BookingStatus.CONFIRMED]
+      })
+      .andWhere('booking.startTime < :end AND booking.endTime > :start', {
+        start,
+        end
+      })
+      .getOne();
+
+    if (overlap) {
+      throw new ConflictException('ขออภัยครับ เวลานี้สนามถูกจองไปแล้ว กรุณาเลือกช่วงเวลาอื่นครับ');
     }
 
     const booking = this.bookingsRepository.create({
