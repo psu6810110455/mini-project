@@ -15,7 +15,6 @@
             background-color: #f8f9fa;
         }
 
-        /* จัดการรูปภาพปกให้สวยงาม */
         .field-image {
             width: 100%;
             height: 400px;
@@ -23,7 +22,6 @@
             border-radius: 15px 15px 0 0;
         }
 
-        /* การ์ดหลัก */
         .card-custom {
             border: none;
             border-radius: 15px;
@@ -32,7 +30,6 @@
             overflow: hidden;
         }
 
-        /* ปุ่มสีเหลือง Custom */
         .btn-warning-custom {
             background-color: #ffc107;
             border-color: #ffc107;
@@ -47,7 +44,6 @@
             box-shadow: 0 4px 10px rgba(224, 168, 0, 0.4);
         }
 
-        /* ส่วนกล่องกฎกติกา */
         .rules-box {
             background-color: #f8f9fa;
             border-radius: 12px;
@@ -66,10 +62,15 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="index.html">หน้าแรก</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.html#fields">สนามทั้งหมด</a></li>
                     <li class="nav-item"><a class="nav-link" href="booking-status.html">ตรวจสอบสถานะ</a></li>
+                    <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                        <a class="btn btn-outline-light rounded-pill px-4 btn-sm" href="#">
+                            <i class="fas fa-user me-2"></i>เข้าสู่ระบบ
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -78,13 +79,9 @@
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-
                 <div class="card card-custom mb-5">
-
                     <img id="fieldImg" class="field-image" src="" alt="Field Image">
-
                     <div class="card-body p-4 p-md-5">
-
                         <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap">
                             <div>
                                 <span class="badge bg-primary mb-2 px-3 py-2 rounded-pill"
@@ -105,10 +102,7 @@
                             <div class="col-md-7 col-lg-8">
                                 <h4 class="fw-bold mb-3"><i
                                         class="fas fa-info-circle me-2 text-primary"></i>รายละเอียดสนาม</h4>
-                                <p class="text-secondary lh-lg" id="fieldDesc">
-                                    กำลังโหลดข้อมูลรายละเอียด...
-                                </p>
-
+                                <p class="text-secondary lh-lg" id="fieldDesc">กำลังโหลดข้อมูลรายละเอียด...</p>
                                 <div class="mt-4">
                                     <h5 class="fw-bold mb-3">สิ่งอำนวยความสะดวก</h5>
                                     <div class="d-flex gap-3 flex-wrap">
@@ -131,7 +125,7 @@
                                     <ul class="list-unstyled text-secondary mb-0">
                                         <li class="mb-3 d-flex"><i
                                                 class="fas fa-check-circle text-success me-2 mt-1"></i>
-                                            <span>ห้ามนำสัตว์เลี้ยงเข้ามาภายในสนาม</span></li>
+                                            <span>ห้ามนำสัตว์เลี้ยงเข้ามา</span></li>
                                         <li class="mb-3 d-flex"><i
                                                 class="fas fa-check-circle text-success me-2 mt-1"></i>
                                             <span>กรุณารักษาความสะอาด</span></li>
@@ -141,8 +135,6 @@
                                         <li class="mb-3 d-flex"><i
                                                 class="fas fa-check-circle text-success me-2 mt-1"></i>
                                             <span>งดสูบบุหรี่บริเวณสนาม</span></li>
-                                        <li class="d-flex"><i class="fas fa-check-circle text-success me-2 mt-1"></i>
-                                            <span>มาตรงต่อเวลาการจอง</span></li>
                                     </ul>
                                 </div>
                             </div>
@@ -152,17 +144,13 @@
 
                         <div class="d-flex gap-3 justify-content-start">
                             <a href="#" id="btnSchedule"
-                                class="btn btn-warning-custom btn-lg px-5 rounded-pill shadow-sm">
-                                <i class="far fa-calendar-check me-2"></i>ดูตารางจอง
-                            </a>
-                            <a href="index.html#fields" class="btn btn-outline-dark btn-lg px-4 rounded-pill">
-                                ย้อนกลับ
-                            </a>
+                                class="btn btn-warning-custom btn-lg px-5 rounded-pill shadow-sm"><i
+                                    class="far fa-calendar-check me-2"></i>ดูตารางจอง</a>
+                            <a href="index.html#fields"
+                                class="btn btn-outline-dark btn-lg px-4 rounded-pill">ย้อนกลับ</a>
                         </div>
-
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -174,73 +162,32 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        // ข้อมูลจำลอง (เหมือนเดิม)
         const fieldsData = {
-            'football': {
-                name: "สนามฟุตบอล / ฟุตซอล",
-                type: "ฟุตบอล",
-                img: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
-                desc: "สนามหญ้าเทียมเกรดพรีเมียม นุ่มเท้า ลดการบาดเจ็บ ขนาดมาตรฐาน 7 คน พร้อมระบบไฟ LED สว่างทั่วสนาม เหมาะสำหรับจัดแข่งหรือซ้อมทีม มีบริการให้เช่าลูกฟุตบอลและเสื้อเอี๊ยม"
-            },
-            'badminton': {
-                name: "สนามแบดมินตัน",
-                type: "แบดมินตัน",
-                img: "badminton.jpg.jpg",
-                desc: "พื้นยางสังเคราะห์คุณภาพสูง ช่วยซัพพอร์ตหัวเข่าและข้อเท้า แสงไฟไม่แยงตา เพดานสูง โปร่งสบาย อากาศถ่ายเทสะดวก มาตรฐานระดับแข่งขัน"
-            },
-            'basketball': {
-                name: "สนามบาสเกตบอล",
-                type: "บาสเกตบอล",
-                img: "basketball.jpg.jpg",
-                desc: "สนามบาสเกตบอลพื้นปาร์เก้ มาตรฐาน FIBA แป้นบาสระบบไฮดรอลิก พร้อมสกอร์บอร์ดดิจิตอล และที่นั่งผู้ชม รองรับการแข่งขันทุกระดับ"
-            },
-            'tennis': {
-                name: "สนามเทนนิส",
-                type: "เทนนิส",
-                img: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
-                desc: "สนาม Hard Court ผิวสนามเรียบสม่ำเสมอ บอลเด้งได้มาตรฐาน รั้วกั้นสูง เก็บลูกบอลง่าย มีบริการเช่าไม้และลูกเทนนิส พร้อมครูฝึกสอนสำหรับผู้เริ่มต้น"
-            },
-            'volleyball': {
-                name: "สนามวอลเลย์บอล",
-                type: "วอลเลย์บอล",
-                img: "https://images.unsplash.com/photo-1592656094267-764a45160876?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
-                desc: "สนามในร่ม พื้นยางนุ่มพิเศษ ตาข่ายปรับระดับได้ รองรับทั้งวอลเลย์บอลชายและหญิง พร้อมอุปกรณ์ครบครัน ระบบระบายอากาศดีเยี่ยม"
-            },
-            'takraw': {
-                name: "สนามตะกร้อ",
-                type: "ตะกร้อ",
-                img: "takraw.jpg.jpg",
-                desc: "สนามตะกร้อพื้นเรียบมาตรฐาน ไม่ลื่น ปลอดภัย ตาข่ายขึงตึงได้ระดับ พื้นที่กว้างขวางสำหรับการเล่นลูกฟาด เหมาะสำหรับการฝึกซ้อมและแข่งขัน"
-            }
+            'football': { name: "สนามฟุตบอล / ฟุตซอล", type: "ฟุตบอล", img: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80", desc: "สนามหญ้าเทียมเกรดพรีเมียม นุ่มเท้า ลดการบาดเจ็บ ขนาดมาตรฐาน 7 คน พร้อมระบบไฟ LED สว่างทั่วสนาม เหมาะสำหรับจัดแข่งหรือซ้อมทีม มีบริการให้เช่าลูกฟุตบอลและเสื้อเอี๊ยม" },
+            'badminton': { name: "สนามแบดมินตัน", type: "แบดมินตัน", img: "badminton.jpg.jpg", desc: "พื้นยางสังเคราะห์คุณภาพสูง ช่วยซัพพอร์ตหัวเข่าและข้อเท้า แสงไฟไม่แยงตา เพดานสูง โปร่งสบาย อากาศถ่ายเทสะดวก มาตรฐานระดับแข่งขัน" },
+            'basketball': { name: "สนามบาสเกตบอล", type: "บาสเกตบอล", img: "basketball.jpg.jpg", desc: "สนามบาสเกตบอลพื้นปาร์เก้ มาตรฐาน FIBA แป้นบาสระบบไฮดรอลิก พร้อมสกอร์บอร์ดดิจิตอล และที่นั่งผู้ชม รองรับการแข่งขันทุกระดับ" },
+            'tennis': { name: "สนามเทนนิส", type: "เทนนิส", img: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80", desc: "สนาม Hard Court ผิวสนามเรียบสม่ำเสมอ บอลเด้งได้มาตรฐาน รั้วกั้นสูง เก็บลูกบอลง่าย มีบริการเช่าไม้และลูกเทนนิส พร้อมครูฝึกสอนสำหรับผู้เริ่มต้น" },
+            'volleyball': { name: "สนามวอลเลย์บอล", type: "วอลเลย์บอล", img: "https://images.unsplash.com/photo-1592656094267-764a45160876?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80", desc: "สนามในร่ม พื้นยางนุ่มพิเศษ ตาข่ายปรับระดับได้ รองรับทั้งวอลเลย์บอลชายและหญิง พร้อมอุปกรณ์ครบครัน ระบบระบายอากาศดีเยี่ยม" },
+            'takraw': { name: "สนามตะกร้อ", type: "ตะกร้อ", img: "takraw.jpg.jpg", desc: "สนามตะกร้อพื้นเรียบมาตรฐาน ไม่ลื่น ปลอดภัย ตาข่ายขึงตึงได้ระดับ พื้นที่กว้างขวางสำหรับการเล่นลูกฟาด เหมาะสำหรับการฝึกซ้อมและแข่งขัน" }
         };
-
         function getQueryParam(p) { return new URLSearchParams(window.location.search).get(p); }
-
         document.addEventListener('DOMContentLoaded', function () {
             const id = getQueryParam('id');
             const scheduleBtn = document.getElementById('btnSchedule');
             const fieldImg = document.getElementById('fieldImg');
-
             if (id && fieldsData[id]) {
                 const d = fieldsData[id];
                 document.getElementById('fieldName').innerText = d.name;
                 document.getElementById('fieldType').innerText = d.type;
                 fieldImg.src = d.img;
                 document.getElementById('fieldDesc').innerText = d.desc;
-
-                // ใส่ Placeholder ถ้ารูปเสีย
-                fieldImg.onerror = function () {
-                    this.src = 'https://via.placeholder.com/1200x600?text=Image+Not+Found';
-                };
-
-                // *** ส่ง ID ไปหน้าตารางจอง ***
+                fieldImg.onerror = function () { this.src = 'https://via.placeholder.com/1200x600?text=Image+Not+Found'; };
                 scheduleBtn.href = 'booking-schedule.html?id=' + id;
             } else {
                 document.getElementById('fieldName').innerText = "ไม่พบข้อมูลสนาม";
                 document.getElementById('fieldDesc').innerText = "กรุณากลับไปเลือกสนามใหม่ที่หน้าแรก";
-                scheduleBtn.style.display = 'none'; // ซ่อนปุ่มถ้าไม่เจอ
+                scheduleBtn.style.display = 'none';
             }
         });
     </script>
