@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Category } from '../../categories/entities/category.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
+import { Booking } from '../../bookings/entities/booking.entity';
+import { Category } from '../../categories/entities/category.entity'; // ✅ Import มาด้วย
 
 @Entity()
 export class SportField {
@@ -7,17 +8,18 @@ export class SportField {
   id: number;
 
   @Column()
-  name: string; // ชื่อสนาม
+  name: string;
 
   @Column()
-  description: string; // รายละเอียด
+  type: string;
 
-  // ❌ ลบ price_per_hour ออกแล้วครับ
+  @Column({ nullable: true })
+  description: string;
 
-  @ManyToOne(() => Category, (category) => category.sportFields, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'category_id' })
+  // ✅ เพิ่มส่วนนี้ เพื่อแก้ error TS2339
+  @ManyToOne(() => Category, (category) => category.sportFields)
   category: Category;
 
-  @Column()
-  categoryId: number;
+  @OneToMany(() => Booking, (booking) => booking.sportField)
+  bookings: Booking[];
 }

@@ -1,26 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+// backend/src/sport-fields/sport-fields.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { SportFieldsService } from './sport-fields.service';
-import { CreateSportFieldDto } from './dto/create-sport-field.dto';
-import { UpdateSportFieldDto } from './dto/update-sport-field.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('sport-fields')
 export class SportFieldsController {
   constructor(private readonly sportFieldsService: SportFieldsService) {}
 
+  // ✅ เพิ่มฟังก์ชันนี้เข้าไป (ที่เดิมคุณทำหายไป)
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createSportFieldDto: CreateSportFieldDto) {
-    return this.sportFieldsService.create(createSportFieldDto);
+  create(@Body() createFieldDto: any) {
+    return this.sportFieldsService.create(createFieldDto);
   }
 
-  // ✅ แก้ตรงนี้: ให้รับ Query Params (เช่น ?search=บอล&categoryId=1)
   @Get()
-  findAll(
-    @Query('search') search?: string,
-    @Query('categoryId') categoryId?: string,
-  ) {
-    // แปลง categoryId จาก string เป็น number ก่อนส่งไป
-    const catId = categoryId ? +categoryId : undefined;
-    return this.sportFieldsService.findAll(search, catId);
+  findAll() {
+    return this.sportFieldsService.findAll();
   }
 
   @Get(':id')
@@ -28,13 +24,17 @@ export class SportFieldsController {
     return this.sportFieldsService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSportFieldDto: UpdateSportFieldDto) {
-    return this.sportFieldsService.update(+id, updateSportFieldDto);
+  update(@Param('id') id: string, @Body() body: any) {
+    // ✅ แก้ไขเส้นหยัก: ตรวจสอบให้แน่ใจว่าใน Service มีฟังก์ชัน update รับ (number, any)
+    return this.sportFieldsService.update(+id, body);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
+    // ✅ แก้ไขเส้นหยัก: ตรวจสอบให้แน่ใจว่าใน Service มีฟังก์ชัน remove รับ (number)
     return this.sportFieldsService.remove(+id);
   }
 }

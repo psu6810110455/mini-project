@@ -3,98 +3,90 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export default function AddFieldPage() {
-  const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [type, setType] = useState("ฟุตบอล 7 คน");
+  const [type, setType] = useState("");
   const [description, setDescription] = useState("");
+  const navigate = useNavigate();
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-
     try {
-      // ✅ ส่งข้อมูลไปยัง Backend โดยกำหนด price เป็น 0 อัตโนมัติ
-      await axios.post(
-        "http://localhost:3000/sport-fields",
+      const token = localStorage.getItem("token"); // ดึง Token มายืนยันสิทธิ์ Admin
+      
+      // ✅ ส่งข้อมูลไปยัง API
+      await axios.post("http://localhost:3000/sport-fields", 
         { 
           name, 
-          price: 0,                   // ❌ ไม่เอาการใส่ราคา กำหนดเป็น 0 ทันที
-          type,
-          description: description || "-", // ป้องกันค่าว่างถ้า DB บังคับ NOT NULL
-          categoryId: 1               // กำหนด ID หมวดหมู่พื้นฐาน (ต้องมีใน DB)
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+          type, 
+          description 
+        }, 
+        { 
+          headers: { Authorization: `Bearer ${token}` } 
+        }
       );
-      
-      alert("เพิ่มสนามสำเร็จ! ✅");
-      navigate("/dashboard");
 
-    } catch (error) {
-      console.error("Add Field Error:", error);
-      alert("เพิ่มสนามไม่สำเร็จ ❌ ตรวจสอบการเชื่อมต่อ Backend");
+      alert("เพิ่มสนามสำเร็จ! ✅");
+      navigate("/fields"); // บันทึกเสร็จแล้ว กลับไปหน้ารวมสนาม
+    } catch (err) {
+      console.error("Error adding field:", err);
+      alert("ไม่สามารถเพิ่มสนามได้ ❌ กรุณาลองใหม่");
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-        <h2 className="text-3xl font-extrabold mb-2 text-green-700">เพิ่มสนามใหม่</h2>
-        <p className="text-gray-500 mb-6">กรอกรายละเอียดสนามที่ต้องการเปิดให้บริการ</p>
-        
-        <form onSubmit={handleAdd} className="space-y-5">
-          {/* ชื่อสนาม */}
+      <div className="bg-white p-10 rounded-[2.5rem] shadow-xl w-full max-w-lg border border-gray-100">
+        <div className="flex items-center gap-3 mb-8">
+          <span className="text-4xl text-blue-600">➕</span>
+          <h2 className="text-3xl font-extrabold text-gray-800">เพิ่มสนามใหม่</h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">ชื่อสนาม</label>
-            <input
-              type="text"
-              className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="เช่น สนามเทพประทาน"
-              required
+            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">ชื่อสนาม</label>
+            <input 
+              type="text" 
+              className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              placeholder="เช่น สนามบาสเกตบอล 1"
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              required 
             />
           </div>
 
-          {/* รายละเอียด */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">รายละเอียดสนาม</label>
-            <textarea
-              className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="หญ้าเทียมเกรด A, มีไฟส่องสว่าง..."
-              rows={3}
+            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">ประเภท</label>
+            <input 
+              type="text" 
+              className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              placeholder="เช่น บาสเกตบอล, ฟุตบอล"
+              value={type} 
+              onChange={(e) => setType(e.target.value)} 
+              required 
             />
           </div>
 
-          {/* ประเภทสนาม */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">ประเภทกีฬา</label>
-            <select
-              className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition appearance-none bg-white"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-            >
-              <option value="ฟุตบอล 7 คน">ฟุตบอล 7 คน</option>
-              <option value="ฟุตบอล 11 คน">ฟุตบอล 11 คน</option>
-              <option value="ฟุตซอล">ฟุตซอล</option>
-              <option value="บาสเกตบอล">บาสเกตบอล</option>
-              <option value="แบดมินตัน">แบดมินตัน</option>
-            </select>
+            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">รายละเอียด</label>
+            <textarea 
+              className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all h-32"
+              placeholder="ระบุข้อมูลเพิ่มเติม..."
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)} 
+            />
           </div>
 
-          {/* ปุ่มบันทึก/ยกเลิก */}
-          <div className="flex flex-col gap-3 pt-4">
+          <div className="flex gap-4 pt-4">
             <button 
               type="submit" 
-              className="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg shadow-green-200 transition active:scale-95"
+              className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95"
             >
-              บันทึกข้อมูลสนาม
+              บันทึก
             </button>
             <button 
               type="button" 
-              onClick={() => navigate("/dashboard")} 
-              className="w-full bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition"
+              onClick={() => navigate("/fields")} 
+              className="flex-1 bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all"
             >
               ยกเลิก
             </button>

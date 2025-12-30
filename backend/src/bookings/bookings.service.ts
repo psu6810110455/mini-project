@@ -1,71 +1,61 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
 
 @Injectable()
 export class BookingsService {
   constructor(
     @InjectRepository(Booking)
-    private bookingRepository: Repository<Booking>,
+    private bookingsRepository: Repository<Booking>,
   ) {}
 
-  async create(bookingData: any, userId: number) {
-    const { sportFieldId, bookingDate, startTime, endTime } = bookingData;
+  async create(createBookingDto: any, userId: number) {
+    const { sportFieldId, bookingDate, startTime, endTime } = createBookingDto;
 
-    const overlapBooking = await this.bookingRepository.findOne({
-      where: [
-        {
-          sportField: { id: sportFieldId },
-          bookingDate: bookingDate,
-          status: 'confirmed',
-          startTime: LessThanOrEqual(endTime), 
-          endTime: MoreThanOrEqual(startTime),
-        },
-      ],
-    });
+    // เช็คเวลาจองซ้อน (Complex Logic #4)
+    const overlap = await this.bookingsRepository.createQueryBuilder('booking')
+      .where('booking.sportFieldId = :fieldId', { fieldId: sportFieldId })
+      .andWhere('booking.bookingDate = :date', { date: bookingDate })
+      .andWhere('booking.status = :status', { status: 'confirmed' })
+      .andWhere(
+        '(booking.startTime < :end AND booking.endTime > :start)',
+        { start: startTime, end: endTime }
+      )
+      .getOne();
 
-    if (overlapBooking) {
-      throw new BadRequestException(
-        `ไม่สามารถจองได้ เนื่องจากช่วงเวลา ${startTime} - ${endTime} มีผู้จองสนามนี้ไว้แล้ว`,
-      );
+    if (overlap) {
+      throw new BadRequestException('ไม่สามารถจองได้ เนื่องจากช่วงเวลานี้มีผู้จองแล้ว');
     }
 
-    const booking = this.bookingRepository.create({
-      ...bookingData,
+    const newBooking = this.bookingsRepository.create({
+      ...createBookingDto,
       user: { id: userId },
       sportField: { id: sportFieldId },
       status: 'confirmed',
     });
 
-    return await this.bookingRepository.save(booking);
+    return this.bookingsRepository.save(newBooking);
   }
 
-  async findMyBookings(userId: number) {
-    return await this.bookingRepository.find({
+  // ✅ เพิ่มฟังก์ชันนี้เพื่อให้ Error ใน Controller หายไป
+  async findAllByUser(userId: number) {
+    return this.bookingsRepository.find({
       where: { user: { id: userId } },
-      relations: ['sportField'],
-      order: { createdAt: 'DESC' },
+      relations: ['sportField'], // ดึงข้อมูลสนามมาโชว์ด้วย
+      order: { id: 'DESC' },     // เอาที่จองล่าสุดขึ้นก่อน
     });
   }
 
   async findAll() {
-    return await this.bookingRepository.find({
-      relations: ['user', 'sportField'],
-      order: { bookingDate: 'ASC', startTime: 'ASC' },
-    });
+    return this.bookingsRepository.find({ relations: ['user', 'sportField'] });
   }
 
-  // ✅ เพิ่มฟังก์ชันนี้เพื่อให้เส้นหยักใน Controller หายไป
   async cancel(id: number) {
-    const booking = await this.bookingRepository.findOne({ where: { id } });
+    const booking = await this.bookingsRepository.findOne({ where: { id } });
+    if (!booking) throw new NotFoundException('ไม่พบรายการจอง');
     
-    if (!booking) {
-      throw new NotFoundException(`ไม่พบรายการจองรหัส ${id}`);
-    }
-
-    // อัปเดตสถานะเป็นยกเลิก
     booking.status = 'cancelled';
-    return await this.bookingRepository.save(booking);
+    return this.bookingsRepository.save(booking);
   }
 }

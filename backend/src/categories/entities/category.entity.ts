@@ -6,10 +6,10 @@ export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  name: string; // ชื่อหมวดหมู่ (เช่น "ฟุตบอล")
+  @Column()
+  name: string;
 
-  // ความสัมพันธ์: 1 หมวดหมู่ มีหลายสนาม
+  // ✅ ตรวจสอบให้แน่ใจว่าเรียกใช้ sportField.category (ตามที่เราตั้งไว้ในไฟล์บน)
   @OneToMany(() => SportField, (sportField) => sportField.category)
-  sportFields: SportField[];
+  sportFields: SportField[]; 
 }

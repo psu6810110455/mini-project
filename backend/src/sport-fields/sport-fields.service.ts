@@ -1,55 +1,37 @@
-import { Injectable } from '@nestjs/common';
-import { CreateSportFieldDto } from './dto/create-sport-field.dto';
-import { UpdateSportFieldDto } from './dto/update-sport-field.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { SportField } from './entities/sport-field.entity';
 
 @Injectable()
 export class SportFieldsService {
   constructor(
     @InjectRepository(SportField)
-    private sportFieldsRepository: Repository<SportField>,
+    private sportFieldRepository: Repository<SportField>,
   ) {}
 
-  create(createSportFieldDto: CreateSportFieldDto) {
-    // บันทึกข้อมูลพร้อมความสัมพันธ์ (categoryId จะถูก map อัตโนมัติ)
-    return this.sportFieldsRepository.save(createSportFieldDto);
+  // ✅ ฟังก์ชันสำหรับสร้างสนามใหม่
+  async create(data: any) {
+    const newField = this.sportFieldRepository.create(data);
+    return await this.sportFieldRepository.save(newField);
   }
 
-  // ✅ ฟังก์ชันไฮไลท์: ค้นหา และ กรองหมวดหมู่
-  findAll(search?: string, categoryId?: number) {
-    const whereCondition: any = {};
-
-    // 1. ถ้ามีการส่งคำค้นหามา (Search Name)
-    if (search) {
-      whereCondition.name = Like(`%${search}%`); // ค้นหาแบบมีคำนี้อยู่ในชื่อ
-    }
-
-    // 2. ถ้ามีการส่งหมวดหมู่มา (Filter Category)
-    if (categoryId) {
-      whereCondition.categoryId = categoryId;
-    }
-
-    return this.sportFieldsRepository.find({
-      where: whereCondition,
-      relations: ['category'], // ดึงข้อมูลหมวดหมู่มาแสดงด้วย
-      order: { name: 'ASC' },  // เรียงตามตัวอักษร
-    });
+  async findAll() {
+    return await this.sportFieldRepository.find();
   }
 
-  findOne(id: number) {
-    return this.sportFieldsRepository.findOne({
-      where: { id },
-      relations: ['category'], // ดึงหมวดหมู่มาโชว์ตอนดูรายละเอียด
-    });
+  async findOne(id: number) {
+    const field = await this.sportFieldRepository.findOne({ where: { id } });
+    if (!field) throw new NotFoundException('ไม่พบสนามที่ต้องการ');
+    return field;
   }
 
-  update(id: number, updateSportFieldDto: UpdateSportFieldDto) {
-    return this.sportFieldsRepository.update(id, updateSportFieldDto);
+  async update(id: number, data: any) {
+    await this.sportFieldRepository.update(id, data);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return this.sportFieldsRepository.delete(id);
+  async remove(id: number) {
+    return await this.sportFieldRepository.delete(id);
   }
 }
