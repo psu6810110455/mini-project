@@ -6,6 +6,7 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { User } from '../users/entities/user.entity';
 import { SportField } from '../sport-fields/entities/sport-field.entity';
+import { Between } from 'typeorm';
 
 @Injectable()
 export class BookingsService {
@@ -78,6 +79,22 @@ export class BookingsService {
     return this.bookingsRepository.find({
       relations: ['user', 'sportField'],
     });
+  }
+
+  async checkAvailability(sportFieldId: number, date: string) {
+    const startOfDay = new Date(`${date}T00:00:00`);
+    const endOfDay = new Date(`${date}T23:59:59`);
+
+    const bookings = await this.bookingsRepository.find({
+      where: {
+        sportField: { id: sportFieldId },
+        startTime: Between(startOfDay, endOfDay),
+        status: BookingStatus.PENDING, // Or CONFIRMED
+      },
+      select: ['startTime', 'endTime'],
+    });
+
+    return bookings;
   }
 
   async findOne(id: number) {

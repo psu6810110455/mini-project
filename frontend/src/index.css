@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f0fdfa;
+  /* soft-bg */
+  color: #1f2937;
+  /* text-main */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base Accessibility Styles */
+button,
+input,
+select,
+textarea {
+  font-size: 16px;
+  /* Prevent zoom on mobile */
+}
+
+/* Smooth Focus Rings for Accessibility */
+*:focus-visible {
+  outline: 3px solid #0d9488;
+  /* primary-teal */
+  outline-offset: 2px;
+}

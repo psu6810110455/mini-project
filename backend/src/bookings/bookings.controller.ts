@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
@@ -30,6 +30,12 @@ export class BookingsController {
   @Get()
   findAll() {
     return this.bookingsService.findAll();
+  }
+
+  // 4. Check Availability (Public)
+  @Get('availability')
+  checkAvailability(@Query('sportFieldId') sportFieldId: string, @Query('date') date: string) {
+    return this.bookingsService.checkAvailability(+sportFieldId, date);
   }
 
   @UseGuards(JwtAuthGuard)
