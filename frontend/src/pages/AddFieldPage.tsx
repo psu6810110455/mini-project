@@ -13,16 +13,15 @@ export default function AddFieldPage() {
     const token = localStorage.getItem("token");
 
     try {
-      // ✅ แก้ไขข้อมูลที่ส่งไปยัง Backend ให้ครบตามที่ Database ต้องการ
+      // ✅ ส่งข้อมูลไปยัง Backend โดยกำหนด price เป็น 0 อัตโนมัติ
       await axios.post(
         "http://localhost:3000/sport-fields",
         { 
           name, 
-          price: 0,            // ✅ ส่ง 0 ไป (เพราะคุณไม่เอาราคา)
+          price: 0,                   // ❌ ไม่เอาการใส่ราคา กำหนดเป็น 0 ทันที
           type,
-          description: description || "-", // ✅ ส่งค่าไปเพื่อแก้ NOT NULL description
-          categoryId: 1,       // ✅ ส่งเลข 1 ไปเพื่อแก้ NOT NULL categoryId
-          category_id: 1       // ✅ ส่งเผื่อไว้ตามที่ Log หลังบ้านเรียกหา
+          description: description || "-", // ป้องกันค่าว่างถ้า DB บังคับ NOT NULL
+          categoryId: 1               // กำหนด ID หมวดหมู่พื้นฐาน (ต้องมีใน DB)
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -32,46 +31,47 @@ export default function AddFieldPage() {
 
     } catch (error) {
       console.error("Add Field Error:", error);
-      alert("เพิ่มสนามไม่สำเร็จ ❌ ตรวจสอบว่ามีข้อมูลในตาราง Category หรือยัง");
+      alert("เพิ่มสนามไม่สำเร็จ ❌ ตรวจสอบการเชื่อมต่อ Backend");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-green-700">เพิ่มสนามใหม่</h2>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+        <h2 className="text-3xl font-extrabold mb-2 text-green-700">เพิ่มสนามใหม่</h2>
+        <p className="text-gray-500 mb-6">กรอกรายละเอียดสนามที่ต้องการเปิดให้บริการ</p>
         
-        <form onSubmit={handleAdd} className="space-y-4">
+        <form onSubmit={handleAdd} className="space-y-5">
           {/* ชื่อสนาม */}
           <div>
-            <label className="block text-gray-700 mb-1 font-semibold">ชื่อสนาม</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1">ชื่อสนาม</label>
             <input
               type="text"
-              className="w-full border p-2 rounded focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="เช่น สนามฟุตบอล A"
+              placeholder="เช่น สนามเทพประทาน"
               required
             />
           </div>
 
-          {/* รายละเอียด (Description) */}
+          {/* รายละเอียด */}
           <div>
-            <label className="block text-gray-700 mb-1 font-semibold">รายละเอียด</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1">รายละเอียดสนาม</label>
             <textarea
-              className="w-full border p-2 rounded focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="ระบุรายละเอียดเพิ่มเติม..."
+              placeholder="หญ้าเทียมเกรด A, มีไฟส่องสว่าง..."
               rows={3}
             />
           </div>
 
           {/* ประเภทสนาม */}
           <div>
-            <label className="block text-gray-700 mb-1 font-semibold">ประเภทสนาม</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1">ประเภทกีฬา</label>
             <select
-              className="w-full border p-2 rounded focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition appearance-none bg-white"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
@@ -83,18 +83,18 @@ export default function AddFieldPage() {
             </select>
           </div>
 
-          {/* ปุ่มกด */}
-          <div className="flex space-x-2 pt-4">
+          {/* ปุ่มบันทึก/ยกเลิก */}
+          <div className="flex flex-col gap-3 pt-4">
             <button 
               type="submit" 
-              className="flex-1 bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700 transition"
+              className="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg shadow-green-200 transition active:scale-95"
             >
-              บันทึกสนาม
+              บันทึกข้อมูลสนาม
             </button>
             <button 
               type="button" 
               onClick={() => navigate("/dashboard")} 
-              className="flex-1 bg-gray-400 text-white py-2 rounded font-bold hover:bg-gray-500 transition"
+              className="w-full bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition"
             >
               ยกเลิก
             </button>

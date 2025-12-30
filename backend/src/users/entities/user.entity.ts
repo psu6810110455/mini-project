@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+// backend/src/users/entities/user.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Booking } from '../../bookings/entities/booking.entity';
 
 @Entity()
 export class User {
@@ -12,13 +13,10 @@ export class User {
   @Column()
   password: string;
 
-  // ❌ ของเดิมที่ Error: @Column({ type: 'enum', enum: ... })
-  // ✅ แก้เป็นแบบนี้ครับ (ลบ type: 'enum' ออก)
-  @Column({ default: 'user' }) 
-  role: string; 
+  @Column({ default: 'user' }) // 'user' หรือ 'admin'
+  role: string;
 
-  @BeforeInsert()
-  async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
+  // ความสัมพันธ์ที่เพิ่มเข้าไปใหม่
+  @OneToMany(() => Booking, (booking) => booking.user)
+  bookings: Booking[];
 }

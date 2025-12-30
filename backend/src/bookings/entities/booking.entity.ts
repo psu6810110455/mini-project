@@ -1,5 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+// backend/src/bookings/entities/booking.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+// ✅ ตรวจสอบว่า path ไปหา user.entity ถูกต้อง (ถ้านำไฟล์ไปวางตามโครงสร้างในรูป)
+import { User } from '../../users/entities/user.entity'; 
+// ✅ ตรวจสอบว่า path ไปหา sport-field.entity ถูกต้อง
 import { SportField } from '../../sport-fields/entities/sport-field.entity';
 
 @Entity()
@@ -8,24 +11,25 @@ export class Booking {
   id: number;
 
   @Column()
-  startTime: Date; // เวลาเริ่ม (เช่น 2025-01-01 10:00:00)
+  bookingDate: string;
 
   @Column()
-  endTime: Date;   // เวลาจบ (เช่น 2025-01-01 12:00:00)
+  startTime: string;
 
-  // 👤 ใครจอง?
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @Column()
+  endTime: string;
+
+  @Column({ default: 'pending' })
+  status: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  // ✅ แก้ไข: เพิ่ม (user) => user.bookings
+  @ManyToOne(() => User, (user) => user.bookings)
   user: User;
 
-  @Column()
-  userId: number;
-
-  // ⚽ จองสนามไหน?
-  @ManyToOne(() => SportField, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'sport_field_id' })
+  // ✅ แก้ไข: เปลี่ยน (field) => field.id เป็น (field) => field.bookings หรือตัดออกถ้ายังไม่มี relation ฝั่งโน้น
+  @ManyToOne(() => SportField, (field) => field.id, { onDelete: 'CASCADE' })
   sportField: SportField;
-
-  @Column()
-  sportFieldId: number;
 }

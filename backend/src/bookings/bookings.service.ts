@@ -1,58 +1,71 @@
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
-import { CreateBookingDto } from './dto/create-booking.dto';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual, MoreThanOrEqual, Between, LessThan, MoreThan } from 'typeorm';
+import { Repository, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Booking } from './entities/booking.entity';
 
 @Injectable()
 export class BookingsService {
   constructor(
     @InjectRepository(Booking)
-    private bookingsRepository: Repository<Booking>,
+    private bookingRepository: Repository<Booking>,
   ) {}
 
-  async create(createBookingDto: CreateBookingDto, userId: number) {
-    const { sportFieldId, startTime, endTime } = createBookingDto;
-    
-    // แปลง string เป็น Date Object
-    const start = new Date(startTime);
-    const end = new Date(endTime);
+  async create(bookingData: any, userId: number) {
+    const { sportFieldId, bookingDate, startTime, endTime } = bookingData;
 
-    // 1. ตรวจสอบเวลา: เวลาจบต้องมากกว่าเวลาเริ่มเสมอ
-    if (end <= start) {
-      throw new BadRequestException('เวลาจบต้องอยู่หลังเวลาเริ่มครับ');
-    }
-
-    // 2. 🛡️ เช็คว่าชนกับคนอื่นไหม? (Logic ขั้นเทพ)
-    // สูตร: (JobStart < NewEnd) AND (JobEnd > NewStart)
-    const existingBooking = await this.bookingsRepository.findOne({
-      where: {
-        sportFieldId: sportFieldId,
-        startTime: LessThan(end),
-        endTime: MoreThan(start),
-      },
+    const overlapBooking = await this.bookingRepository.findOne({
+      where: [
+        {
+          sportField: { id: sportFieldId },
+          bookingDate: bookingDate,
+          status: 'confirmed',
+          startTime: LessThanOrEqual(endTime), 
+          endTime: MoreThanOrEqual(startTime),
+        },
+      ],
     });
 
-    if (existingBooking) {
-      throw new ConflictException('เสียใจด้วยครับ สนามนี้ไม่ว่างในช่วงเวลานั้น 😭');
+    if (overlapBooking) {
+      throw new BadRequestException(
+        `ไม่สามารถจองได้ เนื่องจากช่วงเวลา ${startTime} - ${endTime} มีผู้จองสนามนี้ไว้แล้ว`,
+      );
     }
 
-    // 3. ถ้าว่าง ก็บันทึกเลย!
-    const booking = this.bookingsRepository.create({
-      ...createBookingDto,
-      startTime: start,
-      endTime: end,
-      userId, // เอา ID คนจองใส่เข้าไป
+    const booking = this.bookingRepository.create({
+      ...bookingData,
+      user: { id: userId },
+      sportField: { id: sportFieldId },
+      status: 'confirmed',
     });
 
-    return this.bookingsRepository.save(booking);
+    return await this.bookingRepository.save(booking);
   }
 
-  // ดึงรายการจองทั้งหมด (ของทุกคน)
-  findAll() {
-    return this.bookingsRepository.find({
-      relations: ['user', 'sportField'], // join ตารางมาดูชื่อคนกับชื่อสนาม
-      order: { startTime: 'DESC' }
+  async findMyBookings(userId: number) {
+    return await this.bookingRepository.find({
+      where: { user: { id: userId } },
+      relations: ['sportField'],
+      order: { createdAt: 'DESC' },
     });
+  }
+
+  async findAll() {
+    return await this.bookingRepository.find({
+      relations: ['user', 'sportField'],
+      order: { bookingDate: 'ASC', startTime: 'ASC' },
+    });
+  }
+
+  // ✅ เพิ่มฟังก์ชันนี้เพื่อให้เส้นหยักใน Controller หายไป
+  async cancel(id: number) {
+    const booking = await this.bookingRepository.findOne({ where: { id } });
+    
+    if (!booking) {
+      throw new NotFoundException(`ไม่พบรายการจองรหัส ${id}`);
+    }
+
+    // อัปเดตสถานะเป็นยกเลิก
+    booking.status = 'cancelled';
+    return await this.bookingRepository.save(booking);
   }
 }

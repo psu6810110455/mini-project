@@ -1,143 +1,158 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { useNavigate, useParams } from "react-router-dom";
 
-interface UserToken {
-  username: string;
-  role: string;
-}
+const API_URL = "http://localhost:3000";
 
-interface SportField {
+export interface SportField {
   id: number;
   name: string;
+  description: string;
   type: string;
-  // price: number; 👈 ไม่ต้องใช้แล้วในหน้านี้
+  price: number;
+  categoryId: number;
 }
 
-export default function DashboardPage() {
+export default function EditFieldPage() {
+  const { id } = useParams(); // รับ ID จาก URL
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserToken | null>(null);
-  const [fields, setFields] = useState<SportField[]>([]);
+  
+  // สร้าง state สำหรับเก็บข้อมูลฟอร์ม
+  const [formData, setFormData] = useState<Omit<SportField, "id">>({
+    name: "",
+    description: "",
+    type: "",
+    price: 0,
+    categoryId: 0,
+  });
+
   const [loading, setLoading] = useState(true);
 
+  // 1. ดึงข้อมูลเดิมมาแสดงในฟอร์ม
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/");
-      return;
-    }
+    const fetchFieldData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${API_URL}/sport-fields/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        // ใส่ข้อมูลที่ดึงมาลงใน state
+        setFormData({
+          name: res.data.name,
+          description: res.data.description,
+          type: res.data.type,
+          price: res.data.price,
+          categoryId: res.data.categoryId,
+        });
+      } catch (error) {
+        console.error("Error fetching field data:", error);
+        alert("ไม่พบข้อมูลสนามนี้");
+        navigate("/dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    try {
-      const decoded: UserToken = jwtDecode(token);
-      setUser(decoded);
-      fetchFields(token);
-    } catch (error) {
-      localStorage.removeItem("token");
-      navigate("/");
-    }
-  }, [navigate]);
+    fetchFieldData();
+  }, [id, navigate]);
 
-  const fetchFields = async (token: string) => {
+  // 2. ฟังก์ชันจัดการการเปลี่ยนแปลงใน Input
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "price" || name === "categoryId" ? Number(value) : value,
+    }));
+  };
+
+  // 3. ฟังก์ชัน Submit เพื่อ Update ข้อมูล
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const response = await axios.get("http://localhost:3000/sport-fields", {
+      const token = localStorage.getItem("token");
+      await axios.put(`${API_URL}/sport-fields/${id}`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setFields(response.data);
+      alert("อัปเดตข้อมูลสำเร็จ ✅");
+      navigate("/dashboard");
     } catch (error) {
-      alert("ดึงข้อมูลไม่สำเร็จ ❌");
-    } finally {
-      setLoading(false);
+      console.error("Error updating field:", error);
+      alert("ไม่สามารถบันทึกข้อมูลได้ ❌");
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("ยืนยันจะลบสนามนี้ใช่ไหม?")) return;
-    const token = localStorage.getItem("token");
-    try {
-      await axios.delete(`http://localhost:3000/sport-fields/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert("ลบสำเร็จ! 🗑️");
-      if (token) fetchFields(token);
-    } catch (error) {
-      alert("ลบไม่สำเร็จ ❌");
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
-  };
-
-  if (loading) return <div className="text-center mt-10">กำลังโหลด...</div>;
+  if (loading) return <div className="text-center mt-10">กำลังโหลดข้อมูล...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">แก้ไขข้อมูลสนาม</h1>
         
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <h1 className="text-3xl font-bold text-blue-600">⚽ รายชื่อสนามบอล</h1>
-            <p className="text-gray-600 mt-1">
-              สวัสดีคุณ <span className="font-bold">{user?.username}</span> 
-            </p>
+            <label className="block text-sm font-medium text-gray-700">ชื่อสนาม</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+              required
+            />
           </div>
-          <button onClick={handleLogout} className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-            ออกจากระบบ
-          </button>
-        </div>
 
-        {user?.role === 'admin' && (
-          <div className="mb-4 text-right">
-            <button 
-              onClick={() => navigate("/add-field")}
-              className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 shadow flex items-center gap-2 ml-auto"
+          <div>
+            <label className="block text-sm font-medium text-gray-700">ประเภท (เช่น ฟุตบอล, แบดมินตัน)</label>
+            <input
+              type="text"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">ราคาต่อชั่วโมง</label>
+            <input
+              type="number"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">รายละเอียด</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={4}
+              className="w-full p-3 border rounded-lg mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+            />
+          </div>
+
+          <div className="flex gap-4 mt-8">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard")}
+              className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition"
             >
-              <span>+</span> เพิ่มสนามใหม่
+              ยกเลิก
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg"
+            >
+              บันทึกการแก้ไข
             </button>
           </div>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-lg overflow-hidden">
-            <thead className="bg-blue-50">
-              <tr>
-                <th className="py-3 px-4 border text-left text-blue-800">ID</th>
-                <th className="py-3 px-4 border text-left text-blue-800">ชื่อสนาม</th>
-                <th className="py-3 px-4 border text-left text-blue-800">ประเภท</th>
-                {/* ❌ ลบคอลัมน์ราคาออกแล้ว */}
-                {user?.role === 'admin' && <th className="py-3 px-4 border text-center text-blue-800">จัดการ</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {fields.map((field) => (
-                <tr key={field.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 border">{field.id}</td>
-                  <td className="py-3 px-4 border font-medium">{field.name}</td>
-                  <td className="py-3 px-4 border">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                      {field.type}
-                    </span>
-                  </td>
-                  {/* ❌ ลบข้อมูลราคาออกแล้ว */}
-                  
-                  {user?.role === 'admin' && (
-                    <td className="py-3 px-4 border text-center space-x-2">
-                      <button onClick={() => navigate(`/edit-field/${field.id}`)} className="bg-yellow-400 text-white px-3 py-1 rounded text-sm hover:bg-yellow-500">
-                        แก้ไข
-                      </button>
-                      <button onClick={() => handleDelete(field.id)} className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-                        ลบ
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
+        </form>
       </div>
     </div>
   );

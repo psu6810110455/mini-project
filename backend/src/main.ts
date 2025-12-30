@@ -3,6 +3,10 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  
+  // 👇 เพิ่มบรรทัดนี้ครับ เพื่ออนุญาตให้หน้าเว็บ (Frontend) ยิง API เข้ามาได้
+  app.enableCors(); 
+
+  await app.listen(3000);
 }
 bootstrap();
