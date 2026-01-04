@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2"; // ✅ นำเข้า SweetAlert2
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  // ✅ ตั้งค่าเริ่มต้นสำหรับ Toast (การแจ้งเตือนมุมจอ)
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
+  });
 
   const fetchMyBookings = async () => {
     try {
@@ -26,23 +36,56 @@ export default function DashboardPage() {
   }, []);
 
   const handleCancel = async (id: number) => {
-    if (!window.confirm("ยืนยันการยกเลิกการจองนี้? รายการจะถูกลบออกจากหน้าประวัติของคุณ")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.patch(`http://localhost:3000/bookings/${id}/cancel`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // หลังจากยกเลิกสำเร็จ ให้เรียกฟังก์ชันดึงข้อมูลใหม่ เพื่ออัปเดตสถานะใน State
-      fetchMyBookings();
-    } catch (err) {
-      alert("ไม่สามารถยกเลิกได้ในขณะนี้");
+    // ✅ ใช้ SweetAlert2 ดีไซน์พรีเมียม
+    const result = await Swal.fire({
+      title: 'ยกเลิกการจองนี้?',
+      text: "รายการนี้จะถูกลบออกจากหน้าประวัติของคุณทันที",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#0B2E5E',
+      cancelButtonColor: '#F4F7FA',
+      confirmButtonText: 'ยืนยันการยกเลิก',
+      cancelButtonText: 'กลับ',
+      buttonsStyling: false,
+      customClass: {
+        popup: 'rounded-[2.5rem] p-10 font-["Noto_Sans_Thai_Looped"]',
+        confirmButton: 'bg-[#0B2E5E] text-white px-8 py-3 rounded-2xl font-bold mx-2 shadow-lg shadow-[#0B2E5E]/20',
+        cancelButton: 'bg-[#F4F7FA] text-slate-400 px-8 py-3 rounded-2xl font-bold mx-2'
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token");
+        // 1. ยิง API ไปยกเลิกที่ Backend
+        await axios.patch(`http://localhost:3000/bookings/${id}/cancel`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // 2. ✅ อัปเดต State ในหน้าจอทันที (กรองเอาตัวที่ ID นี้ออกไปเลย)
+        setBookings((prev) => prev.filter((item) => item.id !== id));
+
+        // 3. แจ้งเตือนสำเร็จ
+        Toast.fire({
+          icon: 'success',
+          title: 'ยกเลิกรายการเรียบร้อยแล้ว'
+        });
+
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่สามารถยกเลิกได้',
+          text: 'กรุณาลองใหม่อีกครั้งในภายหลัง',
+          confirmButtonColor: '#0B2E5E',
+          customClass: { popup: 'rounded-[2rem]' }
+        });
+      }
     }
   };
 
-  // กรองรายการ: แสดงเฉพาะรายการที่สถานะไม่ใช่ 'cancelled'
+  // ✅ กรองเฉพาะรายการที่สถานะไม่ใช่ 'cancelled' (เผื่อไว้ในกรณีโหลดหน้าใหม่)
   const activeBookings = bookings.filter((b) => b.status !== "cancelled");
 
-  // ฟังก์ชันคำนวณชั่วโมง
   const getDuration = (start: string, end: string) => {
     const s = parseInt(start.split(":")[0]);
     const e = parseInt(end.split(":")[0]);
@@ -88,12 +131,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* BOOKING LIST - แสดงเฉพาะรายการที่ผ่านการ Filter แล้ว */}
+        {/* BOOKING LIST */}
         <div className="grid gap-6">
           {activeBookings.map((b: any) => (
             <div 
               key={b.id} 
-              className="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+              className="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition-all duration-300"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
@@ -126,7 +169,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* ปุ่มยกเลิก */}
               <div className="w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0">
                 <button 
                   onClick={() => handleCancel(b.id)} 
@@ -138,7 +180,7 @@ export default function DashboardPage() {
             </div>
           ))}
 
-          {/* EMPTY STATE - แสดงเมื่อไม่มีรายการที่รอใช้งานเหลืออยู่ */}
+          {/* EMPTY STATE */}
           {activeBookings.length === 0 && (
             <div className="text-center py-24 bg-white/50 rounded-[3.5rem] border-2 border-dashed border-slate-200">
               <div className="text-6xl mb-6 grayscale opacity-40">🏟️</div>

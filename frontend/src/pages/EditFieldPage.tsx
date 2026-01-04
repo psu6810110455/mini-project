@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2"; // ✅ นำเข้า SweetAlert2
 
 export default function EditFieldPage() {
-  const { id } = useParams(); // รับ ID จาก URL
+  const { id } = useParams();
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ดึงข้อมูลสนามเดิมมาใส่ในฟอร์ม
     const fetchField = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -22,6 +23,14 @@ export default function EditFieldPage() {
         setDescription(res.data.description);
       } catch (err) {
         console.error("ดึงข้อมูลไม่สำเร็จ");
+        Swal.fire({
+          icon: 'error',
+          title: 'ผิดพลาด',
+          text: 'ไม่สามารถดึงข้อมูลสนามได้',
+          confirmButtonColor: '#0B2E5E',
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchField();
@@ -35,36 +44,112 @@ export default function EditFieldPage() {
         { name, type, description },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("แก้ไขข้อมูลสำเร็จ! ✅");
+
+      // ✅ เปลี่ยน alert เป็น Swal.fire ดีไซน์พรีเมียม
+      await Swal.fire({
+        title: 'แก้ไขข้อมูลสำเร็จ! ✅',
+        text: 'ข้อมูลสนามได้รับการอัปเดตเรียบร้อยแล้ว',
+        icon: 'success',
+        confirmButtonColor: '#0B2E5E',
+        confirmButtonText: 'ตกลง',
+        customClass: {
+          popup: 'rounded-[2.5rem] font-["Noto_Sans_Thai_Looped"]',
+          confirmButton: 'rounded-2xl px-10 py-3 font-bold shadow-lg shadow-[#0B2E5E]/20'
+        }
+      });
+      
       navigate("/fields");
-    } catch (err) {
-      alert("แก้ไขไม่สำเร็จ");
+    } catch (err: any) {
+      Swal.fire({
+        title: 'แก้ไขไม่สำเร็จ ❌',
+        text: err.response?.data?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+        icon: 'error',
+        confirmButtonColor: '#0B2E5E',
+        customClass: {
+          popup: 'rounded-[2rem]'
+        }
+      });
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#E9F1F7] flex items-center justify-center font-['Noto_Sans_Thai_Looped']">
+        <p className="font-bold text-[#0B2E5E] animate-pulse">กำลังดึงข้อมูลเดิม...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="bg-white p-8 rounded-[2rem] shadow-xl w-full max-w-lg border-t-8 border-amber-400">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">📝 แก้ไขข้อมูลสนาม</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen bg-[#E9F1F7] font-['Noto_Sans_Thai_Looped',sans-serif] text-slate-900 flex items-center justify-center p-6 antialiased">
+      
+      {/* Background Decor */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] rounded-full bg-[#0B2E5E]/5 blur-[80px]"></div>
+      </div>
+
+      <div className="bg-white p-10 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-xl border border-white relative z-10 transition-all">
+        
+        {/* HEADER */}
+        <div className="flex flex-col items-center mb-10 text-center">
+          <span className="text-[#4DA3FF] text-[10px] font-black uppercase tracking-[0.2em] mb-1">Editor Mode</span>
+          <h2 className="text-3xl font-black text-[#0B2E5E] tracking-tight">แก้ไขข้อมูลสนาม</h2>
+          <p className="text-slate-400 text-sm mt-2 font-medium">ปรับปรุงข้อมูลสนามให้เป็นปัจจุบัน</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* ชื่อสนาม */}
           <div>
-            <label className="block text-sm font-bold mb-2">ชื่อสนาม</label>
-            <input type="text" className="w-full p-4 bg-gray-50 rounded-xl border" 
-                   value={name} onChange={(e) => setName(e.target.value)} required />
+            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">ชื่อสนาม</label>
+            <input 
+              type="text" 
+              className="w-full p-5 bg-[#F4F7FA] rounded-[1.2rem] border-2 border-transparent focus:border-[#4DA3FF] focus:bg-white outline-none transition-all font-bold text-[#0B2E5E]"
+              placeholder="ระบุชื่อสนาม..."
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              required 
+            />
           </div>
+
+          {/* ประเภท */}
           <div>
-            <label className="block text-sm font-bold mb-2">ประเภท</label>
-            <input type="text" className="w-full p-4 bg-gray-50 rounded-xl border" 
-                   value={type} onChange={(e) => setType(e.target.value)} required />
+            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">ประเภทสนามกีฬา</label>
+            <input 
+              type="text" 
+              className="w-full p-5 bg-[#F4F7FA] rounded-[1.2rem] border-2 border-transparent focus:border-[#4DA3FF] focus:bg-white outline-none transition-all font-bold text-[#0B2E5E]"
+              placeholder="เช่น ฟุตบอล, บาสเกตบอล"
+              value={type} 
+              onChange={(e) => setType(e.target.value)} 
+              required 
+            />
           </div>
+
+          {/* รายละเอียด */}
           <div>
-            <label className="block text-sm font-bold mb-2">รายละเอียด</label>
-            <textarea className="w-full p-4 bg-gray-50 rounded-xl border h-32" 
-                      value={description} onChange={(e) => setDescription(e.target.value)} />
+            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">รายละเอียดสนาม</label>
+            <textarea 
+              className="w-full p-5 bg-[#F4F7FA] rounded-[1.2rem] border-2 border-transparent focus:border-[#4DA3FF] focus:bg-white outline-none transition-all h-32 font-medium text-[#0B2E5E] resize-none"
+              placeholder="ข้อมูลสิ่งอำนวยความสะดวก..."
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)} 
+            />
           </div>
-          <div className="flex gap-4 pt-4">
-            <button type="submit" className="flex-1 bg-amber-500 text-white py-4 rounded-2xl font-bold">อัปเดตข้อมูล</button>
-            <button type="button" onClick={() => navigate("/fields")} className="flex-1 bg-gray-200 py-4 rounded-2xl font-bold">กลับ</button>
+
+          {/* ปุ่มดำเนินการ */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            <button 
+              type="submit" 
+              className="flex-[2] bg-[#0B2E5E] text-white py-5 rounded-[1.5rem] font-black text-lg hover:bg-[#1a3a6b] shadow-xl shadow-[#0B2E5E]/20 transition-all active:scale-95 order-1 sm:order-2"
+            >
+              บันทึกการแก้ไข
+            </button>
+            <button 
+              type="button" 
+              onClick={() => navigate("/fields")} 
+              className="flex-1 bg-slate-100 text-slate-500 py-5 rounded-[1.5rem] font-black text-lg hover:bg-slate-200 transition-all active:scale-95 order-2 sm:order-1"
+            >
+              กลับ
+            </button>
           </div>
         </form>
       </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Swal from "sweetalert2"; // ✅ นำเข้า SweetAlert2
 
 export default function BookingPage() {
   const { fieldId } = useParams();
@@ -48,16 +49,46 @@ export default function BookingPage() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedDate || !startTime || !endTime) return alert("กรุณาเลือกข้อมูลให้ครบ");
+    if (!selectedDate || !startTime || !endTime) {
+      return Swal.fire({
+        title: 'ข้อมูลไม่ครบถ้วน',
+        text: 'กรุณาเลือกวันที่และช่วงเวลาให้ครบถ้วนก่อนทำการจอง',
+        icon: 'warning',
+        confirmButtonColor: '#0B2E5E',
+        customClass: { popup: 'rounded-[2rem]' }
+      });
+    }
+
     try {
       const token = localStorage.getItem("token");
       await axios.post("http://localhost:3000/bookings", 
         { bookingDate: selectedDate, startTime, endTime, sportFieldId: Number(fieldId) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("จองสำเร็จ! ✅");
+
+      // ✅ แจ้งเตือนจองสำเร็จแบบพรีเมียม
+      await Swal.fire({
+        title: 'จองสนามสำเร็จ! ✅',
+        text: `คุณได้จอง ${fieldName} ในวันที่ ${new Date(selectedDate).toLocaleDateString('th-TH')} เรียบร้อยแล้ว`,
+        icon: 'success',
+        confirmButtonColor: '#0B2E5E',
+        confirmButtonText: 'ตกลง',
+        customClass: {
+          popup: 'rounded-[2.5rem] font-["Noto_Sans_Thai_Looped"]',
+          confirmButton: 'rounded-2xl px-10 py-3 font-bold shadow-lg shadow-[#0B2E5E]/20'
+        }
+      });
+
       navigate("/my-bookings");
-    } catch (err: any) { alert(err.response?.data?.message || "จองไม่สำเร็จ"); }
+    } catch (err: any) { 
+      Swal.fire({
+        title: 'จองไม่สำเร็จ',
+        text: err.response?.data?.message || 'ขออภัย ระบบขัดข้องกรุณาลองใหม่อีกครั้ง',
+        icon: 'error',
+        confirmButtonColor: '#0B2E5E',
+        customClass: { popup: 'rounded-[2rem]' }
+      });
+    }
   };
 
   const today = new Date().toISOString().split("T")[0];
@@ -65,31 +96,31 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-[#E9F1F7] font-['Noto_Sans_Thai_Looped',sans-serif] text-slate-900 pb-10">
       
-      {/* 1. TOP SUMMARY CARD (สรุปข้อมูลและจำนวนชั่วโมง) */}
+      {/* 1. TOP SUMMARY CARD */}
       <div className="bg-[#0B2E5E] text-white sticky top-0 z-50 shadow-2xl rounded-b-[2.5rem]">
         <div className="max-w-4xl mx-auto p-6">
           <div className="flex justify-between items-center mb-6">
              <button onClick={() => navigate(-1)} className="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all">
                 <span className="px-2 text-sm font-bold">← ย้อนกลับ</span>
              </button>
-             <h1 className="text-xl font-black">รายละเอียดการจอง</h1>
+             <h1 className="text-xl font-black text-white/90">รายละเอียดการจอง</h1>
              <div className="w-20"></div>
           </div>
           
           <div className="bg-white/10 border border-white/20 rounded-[2rem] p-6 backdrop-blur-md">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-white/10">
-              <div className="text-center md:text-center pb-4 md:pb-0">
-                <p className="text-[15px] font-bold text-[#4DA3FF] uppercase tracking-widest mb-1">สนาม</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-white/10 text-center">
+              <div className="pb-4 md:pb-0">
+                <p className="text-[13px] font-bold text-[#4DA3FF] uppercase tracking-widest mb-1">สนาม</p>
                 <h2 className="text-2xl font-black">{fieldName}</h2>
               </div>
               
-              <div className="text-center pt-4 md:pt-0">
-                <p className="text-[15px] font-bold text-[#4DA3FF] uppercase tracking-widest mb-1">วันที่เลือก</p>
+              <div className="py-4 md:py-0">
+                <p className="text-[13px] font-bold text-[#4DA3FF] uppercase tracking-widest mb-1">วันที่เลือก</p>
                 <p className="text-xl font-black">{selectedDate ? new Date(selectedDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) : "ยังไม่ได้เลือก"}</p>
               </div>
 
-              <div className="text-center pt-4 md:pt-0">
-                <p className="text-[15px] font-bold text-[#4DA3FF] uppercase tracking-widest mb-1">เวลาที่จอง ({calculateDuration()} ชม.)</p>
+              <div className="pt-4 md:pt-0">
+                <p className="text-[13px] font-bold text-[#4DA3FF] uppercase tracking-widest mb-1">เวลา ({calculateDuration()} ชม.)</p>
                 <p className="text-xl font-black text-[#ffffff]">
                   {startTime ? `${startTime} - ${endTime || '?'}` : "รอกำหนด"}
                 </p>
@@ -101,16 +132,16 @@ export default function BookingPage() {
 
       <main className="max-w-4xl mx-auto px-6 mt-10 space-y-8">
         
-        {/* 2. DATE SELECTOR (เลือกได้ทั้งวัน เดือน ปี) */}
+        {/* 2. DATE SELECTOR */}
         <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <span className="w-2 h-2 bg-[#4DA3FF] rounded-full"></span>
-              1. เลือกวันที่ เดือน/วัน/ปี
+              1. เลือกวันที่จอง
             </h3>
             {selectedDate && (
                 <span className="bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1 rounded-full border border-green-100">
-                    เลือกแล้ว
+                    ยืนยันวันที่แล้ว
                 </span>
             )}
           </div>
@@ -154,10 +185,10 @@ export default function BookingPage() {
             })}
           </div>
           
-          {/* สรุปชั่วโมงแบบ Visual */}
+          {/* สรุปชั่วโมง Visual */}
           {startTime && endTime && (
-            <div className="mt-8 bg-[#0B2E5E] p-4 rounded-2xl flex items-center justify-between text-white animate-pulse">
-               <span className="text-sm font-bold">สรุปเวลาที่จองทั้งหมด:</span>
+            <div className="mt-8 bg-[#0B2E5E] p-4 rounded-2xl flex items-center justify-between text-white shadow-xl">
+               <span className="text-sm font-bold">ระยะเวลาที่เลือกทั้งหมด:</span>
                <span className="text-xl font-black">{calculateDuration()} ชั่วโมง</span>
             </div>
           )}
@@ -175,7 +206,7 @@ export default function BookingPage() {
             }`}
           >
             {selectedDate && startTime && endTime 
-              ? `ยืนยันการจอง ${calculateDuration()} ชั่วโมง` 
+              ? `ยืนยันการจองสนาม` 
               : 'กรุณากรอกข้อมูลให้ครบถ้วน'}
           </button>
         </div>

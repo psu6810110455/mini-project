@@ -5,12 +5,12 @@ import { useNavigate, Link } from "react-router-dom";
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ เพิ่มสถานะโหลด
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); // เริ่มโหลด
+    setLoading(true);
     
     try {
       const response = await axios.post("http://localhost:3000/auth/login", {
@@ -18,70 +18,105 @@ export default function LoginPage() {
         password,
       });
 
-      // ✅ ล้าง Token เก่า (ถ้ามี) และเก็บอันใหม่
       localStorage.removeItem("token");
       localStorage.setItem("token", response.data.access_token);
       
-      alert("ล็อกอินสำเร็จ! 🎉");
-
-      // 🚀 🚀 เปลี่ยนจุดหมายไปที่หน้ารวมสนาม (Field List) 🚀 🚀
+      // เปลี่ยนจาก alert เป็นการแจ้งเตือนแบบนุ่มนวล (ถ้ามี library toast จะดีมาก)
       navigate("/fields"); 
 
     } catch (error: any) {
       const message = error.response?.data?.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
       alert(`${message} ❌`);
     } finally {
-      setLoading(false); // จบการโหลด
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white p-10 rounded-[2rem] shadow-xl border border-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-[#E9F1F7] font-['Noto_Sans_Thai_Looped',sans-serif] text-slate-900 antialiased p-6">
+      
+      {/* Background Decor (Optional - เพิ่มความหรูหรา) */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#4DA3FF]/10 blur-[100px]"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#0B2E5E]/5 blur-[100px]"></div>
+      </div>
+
+      <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl border border-white relative z-10 transition-all">
+        
+        {/* LOGO / HEADER */}
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-extrabold text-gray-900">ยินดีต้อนรับกลับมา</h2>
-          <p className="text-gray-500 mt-2">กรุณาเข้าสู่ระบบเพื่อเริ่มจองสนาม</p>
+          <div className="inline-block p-4 bg-[#F0F5FA] rounded-[1.5rem] mb-6">
+            <h1 className="text-3xl font-black tracking-tight text-[#0B2E5E]">
+              จอง<span className="text-[#4DA3FF]">สนาม</span>
+            </h1>
+          </div>
+          <h2 className="text-2xl font-black text-[#0B2E5E] leading-tight">ยินดีต้อนรับ</h2>
+          <p className="text-slate-400 text-sm mt-2 font-medium">เข้าสู่ระบบเพื่อจัดการการจองของคุณ</p>
         </div>
         
         <form onSubmit={handleLogin} className="space-y-6">
+          {/* Username Input */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">ชื่อผู้ใช้งาน</label>
-            <input
-              type="text"
-              className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="กรอกชื่อผู้ใช้งาน..."
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">ชื่อผู้ใช้งาน</label>
+            <div className="relative">
+              <input
+                type="text"
+                className="w-full px-6 py-4 bg-[#F4F7FA] border-2 border-transparent rounded-[1.2rem] focus:outline-none focus:border-[#4DA3FF] focus:bg-white transition-all font-bold text-[#0B2E5E]"
+                placeholder="กรอกชื่อผู้ใช้งาน..."
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30">👤</span>
+            </div>
           </div>
 
+          {/* Password Input */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">รหัสผ่าน</label>
-            <input
-              type="password"
-              className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">รหัสผ่าน</label>
+            <div className="relative">
+              <input
+                type="password"
+                className="w-full px-6 py-4 bg-[#F4F7FA] border-2 border-transparent rounded-[1.2rem] focus:outline-none focus:border-[#4DA3FF] focus:bg-white transition-all font-bold text-[#0B2E5E]"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30">🔒</span>
+            </div>
           </div>
 
+          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-4 rounded-2xl font-bold text-white shadow-lg transition-all active:scale-95 ${
-              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+            className={`w-full py-5 rounded-[1.5rem] font-black text-lg text-white shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
+              loading 
+                ? "bg-slate-300 cursor-not-allowed" 
+                : "bg-[#0B2E5E] hover:bg-[#1a3a6b] shadow-[#0B2E5E]/20"
             }`}
           >
-            {loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบ"}
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>กำลังโหลด...</span>
+              </>
+            ) : (
+              "เข้าสู่ระบบ"
+            )}
           </button>
         </form>
 
-        <p className="text-center mt-8 text-gray-600 font-medium">
-            ยังไม่มีบัญชีสมาชิก? <Link to="/register" className="text-blue-600 hover:underline">สร้างบัญชีใหม่</Link>
-        </p>
+        {/* Register Link */}
+        <div className="text-center mt-10">
+            <p className="text-slate-400 font-bold text-sm">
+                ยังไม่มีบัญชีสมาชิก? 
+                <Link to="/register" className="text-[#4DA3FF] hover:text-[#0B2E5E] ml-2 transition-colors underline-offset-4 hover:underline">
+                    สร้างบัญชีใหม่
+                </Link>
+            </p>
+        </div>
       </div>
     </div>
   );
