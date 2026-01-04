@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import Swal from "sweetalert2"; // ✅ นำเข้า SweetAlert2
+import Swal from "sweetalert2";
 
+// ✅ 1. เพิ่ม imageUrl ใน Interface เพื่อรับข้อมูลรูปภาพ
 interface SportField {
   id: number;
   name: string;
   description: string;
   type: string;
+  imageUrl?: string | null; 
 }
 
 export default function FieldListPage() {
@@ -18,11 +20,13 @@ export default function FieldListPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const navigate = useNavigate();
 
-  // ฟังก์ชันดึงข้อมูลสนาม
+  // ✅ 2. กำหนด URL หลักของ Backend เพื่อเรียกใช้รูปภาพและ API
+  const API_BASE_URL = "http://localhost:3000";
+
   const fetchFields = async () => {
     try {
       const currentToken = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:3000/sport-fields", {
+      const res = await axios.get(`${API_BASE_URL}/sport-fields`, {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
       setFields(res.data);
@@ -44,15 +48,13 @@ export default function FieldListPage() {
     fetchFields();
   }, []);
 
-  // ฟังก์ชันลบสนามพร้อม SweetAlert2
   const handleDelete = async (id: number) => {
-    // ✅ ใช้ SweetAlert2 แทน window.confirm
     const result = await Swal.fire({
       title: 'ยืนยันการลบสนามนี้?',
       text: "ข้อมูลสนามจะถูกลบออกถาวรและไม่สามารถเรียกคืนได้",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#0B2E5E', // สีน้ำเงินธีมคุณ
+      confirmButtonColor: '#0B2E5E',
       cancelButtonColor: '#F4F7FA',
       confirmButtonText: 'ยืนยันการลบ',
       cancelButtonText: 'ยกเลิก',
@@ -67,22 +69,18 @@ export default function FieldListPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:3000/sport-fields/${id}`, {
+        await axios.delete(`${API_BASE_URL}/sport-fields/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
-        // กรองข้อมูลออกทันที
         setFields(fields.filter(f => f.id !== id));
 
-        // ✅ แจ้งเตือนสำเร็จ
         Swal.fire({
           title: 'ลบสำเร็จ! ✅',
           text: 'ข้อมูลสนามถูกลบเรียบร้อยแล้ว',
           icon: 'success',
           confirmButtonColor: '#0B2E5E',
-          customClass: {
-            popup: 'rounded-[2rem]'
-          }
+          customClass: { popup: 'rounded-[2rem]' }
         });
       } catch (err) {
         Swal.fire({
@@ -173,9 +171,13 @@ export default function FieldListPage() {
               }`}
             >
               <div className={`bg-[#F0F4F8] rounded-[2rem] overflow-hidden relative mb-4 transition-transform duration-500 group-hover:scale-[1.02] ${viewMode === 'list' ? 'md:mb-0 md:w-56 h-36 shrink-0' : 'aspect-[4/3]'}`}>
+                {/* ✅ แก้ไข: แสดงผลรูปภาพตามจริงจาก Database */}
                 <img 
-                  src={`https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800`} // Placeholder image
-                  alt="field"
+                  src={field.imageUrl 
+                    ? `${API_BASE_URL}${field.imageUrl}` 
+                    : `https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800`
+                  } 
+                  alt={field.name}
                   className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                 />
                 <div className="absolute top-4 left-4">

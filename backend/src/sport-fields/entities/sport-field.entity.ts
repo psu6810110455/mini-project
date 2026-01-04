@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
 import { Booking } from '../../bookings/entities/booking.entity';
-import { Category } from '../../categories/entities/category.entity'; // ✅ Import มาด้วย
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity()
 export class SportField {
@@ -16,7 +16,11 @@ export class SportField {
   @Column({ nullable: true })
   description: string;
 
-  // ✅ เพิ่มส่วนนี้ เพื่อแก้ error TS2339
+  // ✅ เพิ่มบรรทัดนี้ เพื่อให้ Database มีช่องเก็บชื่อไฟล์รูปภาพ
+  // nullable: true หมายถึงสนามนี้จะยังไม่มีรูปก็ได้
+  @Column({ nullable: true })
+  imageUrl: string;
+
   @ManyToOne(() => Category, (category) => category.sportFields)
   category: Category;
 

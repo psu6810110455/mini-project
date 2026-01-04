@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SportFieldsModule } from './sport-fields/sport-fields.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { BookingsModule } from './bookings/bookings.module';
     CategoriesModule,
     SportFieldsModule,
     BookingsModule,
+    MediaModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import Swal from "sweetalert2"; // ✅ Import Swal เข้ามา
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -18,15 +19,38 @@ export default function LoginPage() {
         password,
       });
 
+      // เก็บ Token
       localStorage.removeItem("token");
       localStorage.setItem("token", response.data.access_token);
       
-      // เปลี่ยนจาก alert เป็นการแจ้งเตือนแบบนุ่มนวล (ถ้ามี library toast จะดีมาก)
+      // ✅ แสดงการแจ้งเตือนสำเร็จแบบนุ่มนวล
+      await Swal.fire({
+        icon: 'success',
+        title: 'ยินดีต้อนรับกลับมา! ✅',
+        text: 'เข้าสู่ระบบสำเร็จ กำลังพาคุณไปหน้ารายการสนาม',
+        timer: 1500,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-[2.5rem] font-["Noto_Sans_Thai_Looped"]',
+        }
+      });
+
       navigate("/fields"); 
 
     } catch (error: any) {
       const message = error.response?.data?.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
-      alert(`${message} ❌`);
+      
+      // ✅ แจ้งเตือน Error ด้วย Swal
+      Swal.fire({
+        icon: 'error',
+        title: 'เข้าสู่ระบบไม่สำเร็จ ❌',
+        text: message,
+        confirmButtonColor: '#0B2E5E',
+        customClass: {
+          popup: 'rounded-[2rem] font-["Noto_Sans_Thai_Looped"]',
+          confirmButton: 'rounded-2xl px-10'
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -35,7 +59,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#E9F1F7] font-['Noto_Sans_Thai_Looped',sans-serif] text-slate-900 antialiased p-6">
       
-      {/* Background Decor (Optional - เพิ่มความหรูหรา) */}
+      {/* Background Decor */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#4DA3FF]/10 blur-[100px]"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#0B2E5E]/5 blur-[100px]"></div>
@@ -56,8 +80,8 @@ export default function LoginPage() {
         
         <form onSubmit={handleLogin} className="space-y-6">
           {/* Username Input */}
-          <div>
-            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">ชื่อผู้ใช้งาน</label>
+          <div className="group">
+            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-[#4DA3FF]">ชื่อผู้ใช้งาน</label>
             <div className="relative">
               <input
                 type="text"
@@ -67,13 +91,13 @@ export default function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
-              <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30">👤</span>
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:opacity-100 transition-opacity">👤</span>
             </div>
           </div>
 
           {/* Password Input */}
-          <div>
-            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">รหัสผ่าน</label>
+          <div className="group">
+            <label className="block text-xs font-black text-slate-400 mb-2 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-[#4DA3FF]">รหัสผ่าน</label>
             <div className="relative">
               <input
                 type="password"
@@ -83,7 +107,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30">🔒</span>
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:opacity-100 transition-opacity">🔒</span>
             </div>
           </div>
 
